@@ -12,7 +12,7 @@ services:
       - app:/usr/share/nginx/html
 
   php:
-    image: php:fpm-alpine3.7
+    image: andrewnk/simple-alpine-php
     container_name: php
     networks:
       - web
