@@ -87,8 +87,8 @@ RUN echo 'Creating modsec file' && \
 RUN rm -fr /etc/nginx/conf.d/ && \
     rm -fr /etc/nginx/nginx.conf
 
-COPY conf/nginx /etc/nginx/nginx.conf
-COPY conf/conf.d/ /etc/nginx/conf.d/
+COPY conf/nginx.conf /etc/nginx
+COPY conf/conf.d /etc/nginx/conf.d
 COPY errors /usr/share/nginx/errors
 
 RUN chown -R nginx:nginx /usr/share/nginx
