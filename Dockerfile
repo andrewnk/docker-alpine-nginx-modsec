@@ -37,12 +37,11 @@ RUN apk add --no-cache --virtual .build-deps \
         sed
 
 RUN echo "Installing ModSec Library" && \
-    git clone -b v3/dev/performance --single-branch https://github.com/SpiderLabs/ModSecurity /opt/ModSecurity
+    git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity /opt/ModSecurity
 
 WORKDIR /opt/ModSecurity
 
-RUN git checkout 62022b49a22389cdecd35110e503285494fdf938 && \
-    git submodule init && \
+RUN git submodule init && \
     git submodule update && \
     ./build.sh && \
     ./configure && make && make install && \
@@ -64,17 +63,15 @@ RUN ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx && \
 
 RUN echo "Begin installing ModSec OWASP Rules" && \
     mkdir /etc/nginx/modsec && \
-    wget -P /etc/nginx/modsec/ https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/dev/performance/modsecurity.conf-recommended && \
+    wget -P /etc/nginx/modsec/ https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended && \
     mv /etc/nginx/modsec/modsecurity.conf-recommended /etc/nginx/modsec/modsecurity.conf && \
     sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/nginx/modsec/modsecurity.conf
 
 WORKDIR /opt
 
-RUN git clone -b v3.1/dev https://github.com/SpiderLabs/owasp-modsecurity-crs && \
+RUN git clone -b v3.0/master https://github.com/SpiderLabs/owasp-modsecurity-crs && \
     mv owasp-modsecurity-crs/ /usr/local/ && \
-    cp /usr/local/owasp-modsecurity-crs/crs-setup.conf.example /usr/local/owasp-modsecurity-crs/crs-setup.conf && \
-    rm -fr /usr/local/owasp-modsecurity-crs/rules/REQUEST-903.9003-NEXTCLOUD-EXCLUSION-RULES.conf && \
-    rm -fr /usr/local/owasp-modsecurity-crs/rules/REQUEST-944-APPLICATION-ATTACK-JAVA.conf
+    cp /usr/local/owasp-modsecurity-crs/crs-setup.conf.example /usr/local/owasp-modsecurity-crs/crs-setup.conf
 
 RUN echo 'Creating modsec file' && \
     echo -e '# From https://github.com/SpiderLabs/ModSecurity/blob/master/\n \
@@ -90,8 +87,8 @@ RUN echo 'Creating modsec file' && \
 RUN rm -fr /etc/nginx/conf.d/ && \
     rm -fr /etc/nginx/nginx.conf
 
-COPY conf/default.conf /etc/nginx/conf.d/
-COPY conf/nginx.conf /etc/nginx/
+COPY --chown=nginx:nginx conf /etc/nginx/
+COPY --chown=nginx:nginx errors /usr/share/nginx/errors
 
 #delete uneeded and clean up
 RUN apk del .build-deps && \
@@ -100,3 +97,5 @@ RUN apk del .build-deps && \
     rm -fr ModSecurity-nginx && \
     rm -fr nginx-$NGINX_VERSION.tar.gz && \
     rm -fr nginx-$NGINX_VERSION
+
+WORKDIR /usr/share/nginx/html
