@@ -87,8 +87,11 @@ RUN echo 'Creating modsec file' && \
 RUN rm -fr /etc/nginx/conf.d/ && \
     rm -fr /etc/nginx/nginx.conf
 
-COPY --chown=nginx:nginx conf /etc/nginx/
-COPY --chown=nginx:nginx errors /usr/share/nginx/errors
+COPY conf/nginx /etc/nginx/nginx.conf
+COPY conf/conf.d/ /etc/nginx/conf.d/
+COPY errors /usr/share/nginx/errors
+
+RUN chown -R nginx:nginx /usr/share/nginx
 
 #delete uneeded and clean up
 RUN apk del .build-deps && \
