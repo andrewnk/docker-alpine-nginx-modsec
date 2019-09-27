@@ -12,12 +12,12 @@ services:
       - app:/usr/share/nginx/html
 
   php:
-    image: andrewnk/simple-alpine-php
+    image: andrewnk/base-alpine-php
     container_name: php
     networks:
       - web
     volumes:
-      - app:/usr/share/nginx/html
+      - app:/var/www/html
 
 volumes:
   app:
