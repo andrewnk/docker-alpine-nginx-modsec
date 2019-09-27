@@ -66,7 +66,7 @@ RUN ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx  --add-d
 WORKDIR /opt
 
 RUN echo "Begin installing ModSec OWASP Rules" && \
-    git clone -b v3.0/master https://github.com/SpiderLabs/owasp-modsecurity-crs && \
+    git clone -b v3.2/master https://github.com/SpiderLabs/owasp-modsecurity-crs && \
     mv owasp-modsecurity-crs/ /usr/local/
 
 RUN mkdir /etc/nginx/modsec && \
