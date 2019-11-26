@@ -1,6 +1,4 @@
-FROM nginx:alpine
-
-LABEL maintainer="Andrew Kimball"
+FROM nginx:alpine as build_modsecurity
 
 RUN apk add --no-cache --virtual .build-deps \
         gcc \
@@ -28,7 +26,6 @@ RUN apk add --no-cache --virtual .build-deps \
         yajl-dev \
     # Add runtime dependencies that should not be removed
     && apk add --no-cache \
-        doxygen \
         geoip \
         geoip-dev \
         yajl \
@@ -61,7 +58,8 @@ WORKDIR /opt/nginx-$NGINX_VERSION
 
 RUN ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx  --add-dynamic-module=../GeoIP && \
     make modules && \
-    cp objs/ngx_http_modsecurity_module.so objs/ngx_http_geoip2_module.so /etc/nginx/modules
+    cp objs/ngx_http_modsecurity_module.so objs/ngx_http_geoip2_module.so /etc/nginx/modules && \
+    rm -f /usr/local/modsecurity/lib/libmodsecurity.a /usr/local/modsecurity/lib/libmodsecurity.la
 
 WORKDIR /opt
 
@@ -87,13 +85,28 @@ RUN mkdir -p /etc/nginx/geoip && \
 
 RUN chown -R nginx:nginx /usr/share/nginx /etc/nginx
 
-#delete uneeded and clean up
-RUN apk del .build-deps && \
-    apk del .libmodsecurity-deps && \
-    rm -fr ModSecurity && \
-    rm -fr ModSecurity-nginx && \
-    rm -fr GeoIp && \
-    rm -fr nginx-$NGINX_VERSION.tar.gz && \
-    rm -fr nginx-$NGINX_VERSION
+
+FROM nginx:alpine
+
+LABEL maintainer="Andrew Kimball"
+
+RUN mkdir /etc/nginx/modsec && \
+    rm -fr /etc/nginx/conf.d/ && \
+    rm -fr /etc/nginx/nginx.conf
+
+# Copy nginx config from the intermediate container
+COPY --from=build_modsecurity /etc/nginx/. /etc/nginx/
+# Copy the /usr/local folder form the intermediate container (owasp-modsecurty-crs, modsecurity libs)
+COPY --from=build_modsecurity /usr/local/. /usr/local/.
+COPY --from=build_modsecurity /usr/share/nginx/errors /usr/share/nginx/errors
+COPY --from=build_modsecurity /usr/lib/nginx/modules/. /usr/lib/nginx/modules/
+
+RUN apk upgrade --no-cache \
+      && apk add --no-cache \
+             yajl \
+             libstdc++ \
+             libmaxminddb-dev \
+             tzdata \
+      && chown -R nginx:nginx /usr/share/nginx /etc/nginx
 
 WORKDIR /usr/share/nginx/html
