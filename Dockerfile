@@ -1,11 +1,13 @@
 FROM nginx:alpine as build_modsecurity
 
-RUN apk add --no-cache --virtual .build-deps \
+ARG GEO_DB_RELEASE=2020-03
+ENV GEO_DB_RELEASE=${GEO_DB_RELEASE}
+
+RUN apk add --no-cache --virtual general-dependencies \
         gcc \
         libc-dev \
         make \
         openssl-dev \
-        pcre-dev \
         zlib-dev \
         linux-headers \
         curl \
@@ -13,7 +15,6 @@ RUN apk add --no-cache --virtual .build-deps \
         libxslt-dev \
         gd-dev \
         perl-dev \
-    && apk add --no-cache --virtual .libmodsecurity-deps \
         pcre-dev \
         libxml2-dev \
         git \
@@ -24,13 +25,9 @@ RUN apk add --no-cache --virtual .build-deps \
         flex \
         bison \
         yajl-dev \
-    # Add runtime dependencies that should not be removed
-    && apk add --no-cache \
-        geoip \
+        gzip \
         geoip-dev \
-        yajl \
         libstdc++ \
-        git \
         sed \
         libmaxminddb-dev
 
@@ -77,13 +74,15 @@ COPY conf/owasp/ /usr/local/owasp-modsecurity-crs/
 COPY errors /usr/share/nginx/errors
 
 RUN mkdir -p /etc/nginx/geoip && \
-    wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz && \
-    wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz && \
-    tar -xvzf GeoLite2-City.tar.gz --strip-components=1 && \
-    tar -xvzf GeoLite2-Country.tar.gz --strip-components=1 && \
+    wget https://download.db-ip.com/free/dbip-city-lite-${GEO_DB_RELEASE}.mmdb.gz && \
+    wget https://download.db-ip.com/free/dbip-country-lite-${GEO_DB_RELEASE}.mmdb.gz && \
+    gzip -d *.mmdb.gz && \
+    mv dbip-city-lite-${GEO_DB_RELEASE}.mmdb dbip-city-lite.mmdb && \
+    mv dbip-country-lite-${GEO_DB_RELEASE}.mmdb dbip-country-lite.mmdb && \
     mv *.mmdb /etc/nginx/geoip/
 
-RUN chown -R nginx:nginx /usr/share/nginx /etc/nginx
+#RUN chown -R nginx:nginx /usr/share/nginx /etc/nginx &&
+RUN apk del general-dependencies
 
 
 FROM nginx:alpine
@@ -96,6 +95,7 @@ RUN mkdir /etc/nginx/modsec && \
 
 # Copy nginx config from the intermediate container
 COPY --from=build_modsecurity /etc/nginx/. /etc/nginx/
+
 # Copy the /usr/local folder form the intermediate container (owasp-modsecurty-crs, modsecurity libs)
 COPY --from=build_modsecurity /usr/local/. /usr/local/.
 COPY --from=build_modsecurity /usr/share/nginx/errors /usr/share/nginx/errors
