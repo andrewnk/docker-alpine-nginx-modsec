@@ -3,6 +3,9 @@ FROM nginx:alpine as build_modsecurity
 ARG GEO_DB_RELEASE=2020-03
 ENV GEO_DB_RELEASE=${GEO_DB_RELEASE}
 
+ARG MODSEC_BRANCH=v3.0.4
+ENV MODSEC_BRANCH=${MODSEC_BRANCH}
+
 RUN apk add --no-cache --virtual general-dependencies \
         gcc \
         libc-dev \
@@ -34,7 +37,7 @@ RUN apk add --no-cache --virtual general-dependencies \
 WORKDIR /opt/ModSecurity
 
 RUN echo "Installing ModSec Library" && \
-    git clone -b v3.0.4 --single-branch https://github.com/SpiderLabs/ModSecurity . && \
+    git clone -b ${MODSEC_BRANCH} --single-branch https://github.com/SpiderLabs/ModSecurity . && \
     git submodule init && \
     git submodule update && \
     ./build.sh && \
