@@ -37,7 +37,7 @@ RUN apk add --no-cache --virtual .build-deps \
 WORKDIR /opt/ModSecurity
 
 RUN echo "Installing ModSec Library" && \
-    git clone -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity . && \
+    git clone -b v3.0.4 --single-branch https://github.com/SpiderLabs/ModSecurity . && \
     git submodule init && \
     git submodule update && \
     ./build.sh && \
