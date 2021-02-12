@@ -1,4 +1,4 @@
-ARG NGINX_VER=1.19.5
+ARG NGINX_VER=1.19.4
 
 FROM nginx:${NGINX_VER}-alpine as build_modsecurity
 
