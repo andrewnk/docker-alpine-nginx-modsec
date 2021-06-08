@@ -1,7 +1,7 @@
 .remove_docker_image_from_registry:
-  image: ${CI_REGISTRY}/docker/images/docker:latest
+  image: docker:latest
   services:
-    - ${CI_REGISTRY}/docker/images/docker:dind
+    - docker:dind
   variables:
     IMAGE_TAG: "${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
     REG_SHA256: ade837fc5224acd8c34732bf54a94f579b47851cc6a7fd5899a98386b782e228
