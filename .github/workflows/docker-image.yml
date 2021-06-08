@@ -6,6 +6,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Add branch to env
+      run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
     - name: Log in to Docker Hub
       uses: docker/login-action@v1
       with:
@@ -16,4 +18,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: andrewnk/alpine-nginx-modsec:${GITHUB_REF##*/}
+        tags: andrewnk/alpine-nginx-modsec:${{ env.BRANCH }}
