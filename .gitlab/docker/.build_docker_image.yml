@@ -20,9 +20,13 @@
       if [ "${USE_CACHE}" = true ]; then
         # work our way through possible image tags to find a potential match to use for cache
         echo "${IMAGE_CACHE_TAGS}" | tr ' ' '\n' | while read tag; do
-          # echo "Checking the registry for ${!tag@}"
+          # Check registry where image tag has DOCKER_TARGET
           if docker manifest inspect ${CI_REGISTRY_IMAGE}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET} > /dev/null; then
             image_tag=${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
+            break
+          elif docker manifest inspect ${CI_REGISTRY_IMAGE}:${tag} > /dev/null; then
+            # Check registry where image tag does not have a DOCKER_TARGET
+            image_tag=${tag}
             break
           fi
         done
