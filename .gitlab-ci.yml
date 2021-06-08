@@ -148,6 +148,7 @@ push_prod_image_to_registry:
     - trivy_container_scanning
   variables:
     DOCKER_TARGET: "production"
+    TAG_IMAGE_WITH_TARGET: "false"
   tags:
     - build
 # -- End - push final images to registry
