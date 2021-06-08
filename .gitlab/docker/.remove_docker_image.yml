@@ -1,0 +1,7 @@
+.remove_docker_image:
+  services:
+    - ${CI_REGISTRY}/docker/images/docker:dind
+  variables:
+    CI_IMAGE_NAME: "${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+  script:
+    - docker image rm -f ${CI_IMAGE_NAME}

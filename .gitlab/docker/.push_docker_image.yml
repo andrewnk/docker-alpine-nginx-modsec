@@ -1,0 +1,20 @@
+.push_docker_image:
+  services:
+    - ${CI_REGISTRY}/docker/images/docker:dind
+  variables:
+    CI_IMAGE_NAME: "${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+    IMAGE_TAGS: "${CI_COMMIT_REF_SLUG} ${CI_COMMIT_SHA} ${CI_COMMIT_SHORT_SHA} ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
+  before_script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - >
+      echo "${IMAGE_TAGS}" | tr ' ' '\n' | while read tag; do
+        # Only tag and push if element is not an empty string
+        if [[ -n "${tag}" ]]; then
+          docker tag ${CI_IMAGE_NAME} ${CI_REGISTRY_IMAGE}:${tag}
+          docker push ${CI_REGISTRY_IMAGE}:${tag}
+          docker image rm -f ${CI_REGISTRY_IMAGE}:${tag}
+        fi
+      done
+  after_script:
+    - docker logout ${CI_REGISTRY}

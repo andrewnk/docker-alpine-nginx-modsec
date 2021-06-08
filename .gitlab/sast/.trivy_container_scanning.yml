@@ -1,0 +1,31 @@
+variables:
+  TRIVY_VERSION: "latest"
+
+.trivy_container_scanning:
+  image:
+    name: aquasec/trivy:${TRIVY_VERSION}
+    entrypoint: [""]
+  variables:
+    CI_IMAGE_NAME: "${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+    CI_OUTPUT_DIR: "gitlab_ci_artifacts/reports/sast/trivy"
+    TRIVY_CACHE_DIR: "${CI_PROJECT_DIR}/gitlab_ci_artifacts/cache/trivy"
+    TRIVY_OUTPUT_FILENAME: "trivy-container-scanning-report.json"
+  script:
+    # Ensure a reports dir exists
+    - mkdir -p ${CI_OUTPUT_DIR} ${TRIVY_CACHE_DIR}
+
+    # Build report
+    - trivy --exit-code 0 --cache-dir ${TRIVY_CACHE_DIR} --no-progress -o ${CI_OUTPUT_DIR}/${TRIVY_OUTPUT_FILENAME} ${CI_IMAGE_NAME}
+
+    # Print high vulnerabilities
+    - trivy --exit-code 0 --cache-dir ${TRIVY_CACHE_DIR} --no-progress --severity HIGH ${CI_IMAGE_NAME}
+
+    # Throw error on critical vulnerabilities
+    - trivy --exit-code 1 --cache-dir ${TRIVY_CACHE_DIR} --severity CRITICAL --no-progress ${CI_IMAGE_NAME}
+  cache:
+    paths:
+      - ${TRIVY_CACHE_DIR}
+  artifacts:
+    when: always
+    reports:
+      sast: ${CI_OUTPUT_DIR}/${TRIVY_OUTPUT_FILENAME}
