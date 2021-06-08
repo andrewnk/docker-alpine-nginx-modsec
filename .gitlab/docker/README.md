@@ -30,11 +30,17 @@ build_image:
     - build
 ```
 
-| Variables            | Description                                                         | Default    |
-| -------------------- | ------------------------------------------------------------------- | ---------- |
-| DOCKER_BUILD_CONTEXT | Docker build context                                                | .          |
-| DOCKERFILE_FILENAME  | The name of the Dockerfile                                          | Dockerfile |
-| DOCKERFILE_PATH      | The relative path where the Dockerfile is located - must end in `/` | ./         |
+| Variables            | Description                                                                                      | Default                                                                                                | Example                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| BASE_IMAGE_CACHE_TAG | The base image tag to be used as cache in a multistage build                                     |                                                                                                        | BASE_IMAGE_CACHE_TAG: "${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}-base" |
+| CI_IMAGE_NAME        | The name of the source docker image that should be referenced when tagging and pushing           | ${CI_PROJECT_ID}-${CI_PIPELINE_ID}                                                                     |                                                                       |
+| DOCKER_BUILD_ARGS    | Any additional build arguments                                                                   |                                                                                                        | DOCKER_BUILD_ARGS: "--build-arg RAILS_ENV=development"                |
+| DOCKER_BUILD_CONTEXT | Docker build context                                                                             | .                                                                                                      |                                                                       |
+| DOCKERFILE_FILENAME  | The name of the Dockerfile                                                                       | Dockerfile                                                                                             |                                                                       |
+| DOCKERFILE_PATH      | The relative path where the Dockerfile is located - must end in `/`                              | ./                                                                                                     |                                                                       |
+| DOCKER_TARGET        | If provided, this will build the appropriate stage in a multistage dockerfile                    |                                                                                                        | DOCKER_TARGET: "development"                                          |
+| IMAGE_CACHE_TAGS     | A list of tags to loop through to check the registry for images to use for cache - order matters | "${CI_COMMIT_REF_SLUG} ${CI_COMMIT_SHA} ${CI_COMMIT_SHORT_SHA} ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}" |                                                                       |
+| USE_CACHE            | Whether or not to use cache when building                                                        | true                                                                                                   |                                                                       |
 
 ---
 
@@ -61,6 +67,12 @@ push_image_to_registry:
   tags:
     - build
 ```
+
+| Variables     | Description                                                                                                                                                              | Default                                                                                                | Example                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| CI_IMAGE_NAME | The name of the source docker image that should be referenced when tagging and pushing                                                                                   | ${CI_PROJECT_ID}-${CI_PIPELINE_ID}                                                                     |                              |
+| DOCKER_TARGET | This will append a hyphen followed by the value of DOCKER_TARGET (-DOCKER_TARGET) to the docker image tag; this is useful when creating multistage builds in a single MR |                                                                                                        | DOCKER_TARGET: "development" |
+| IMAGE_TAGS    | A list that will be used to tag the docker image and then pushed to the registry                                                                                         | "${CI_COMMIT_REF_SLUG} ${CI_COMMIT_SHA} ${CI_COMMIT_SHORT_SHA} ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}" |                              |
 
 ---
 
