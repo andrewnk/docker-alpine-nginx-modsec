@@ -1,6 +1,6 @@
 ARG NGINX_VER=1.18
 
-FROM nginx:${NGINX_VER}-alpine as build_modsecurity
+FROM nginx:${NGINX_VER}-alpine as base
 
 ARG GEO_DB_RELEASE=2021-06
 ARG MODSEC_BRANCH=v3.0.4
@@ -73,15 +73,15 @@ RUN echo 'Installing Nginx Modules' && \
     apk del general-dependencies
 
 
-FROM nginx:${NGINX_VER}-alpine
+FROM nginx:${NGINX_VER}-alpine as production
 
 LABEL maintainer="Andrew Kimball"
 
 # Copy nginx, owasp-modsecurity-crs, and modsecurity from the build image
-COPY --from=build_modsecurity /etc/nginx/ /etc/nginx/
-COPY --from=build_modsecurity /usr/local/modsecurity /usr/local/modsecurity
-COPY --from=build_modsecurity /usr/local/owasp-modsecurity-crs /usr/local/owasp-modsecurity-crs
-COPY --from=build_modsecurity /usr/lib/nginx/modules/ /usr/lib/nginx/modules/
+COPY --from=base /etc/nginx/ /etc/nginx/
+COPY --from=base /usr/local/modsecurity /usr/local/modsecurity
+COPY --from=base /usr/local/owasp-modsecurity-crs /usr/local/owasp-modsecurity-crs
+COPY --from=base /usr/lib/nginx/modules/ /usr/lib/nginx/modules/
 
 # Copy local config files into the image
 COPY errors /usr/share/nginx/errors
