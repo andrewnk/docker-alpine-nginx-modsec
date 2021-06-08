@@ -1,0 +1,56 @@
+.build_docker_image:
+  services:
+    - ${CI_REGISTRY}/docker/images/docker:dind
+  variables:
+    CI_IMAGE_NAME: "${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+    BASE_IMAGE_CACHE_TAG: ""
+    DOCKER_BUILDKIT: 1
+    DOCKER_BUILD_ARGS: ""
+    DOCKER_BUILD_CONTEXT: .
+    DOCKER_CLI_EXPERIMENTAL: "enabled"
+    DOCKER_TARGET: ""
+    DOCKERFILE_FILENAME: Dockerfile
+    DOCKERFILE_PATH: ./
+    IMAGE_CACHE_TAGS: "${CI_COMMIT_REF_SLUG} ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME} ${CI_DEFAULT_BRANCH}" #tags to loop through for cache - order matters
+    USE_CACHE: "true"
+  before_script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - >
+      if [ "${USE_CACHE}" = true ]; then
+        # work our way through possible image tags to find a potential match to use for cache
+        echo "${IMAGE_CACHE_TAGS}" | tr ' ' '\n' | while read tag; do
+          # echo "Checking the registry for ${!tag@}"
+          if docker manifest inspect ${CI_REGISTRY_IMAGE}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET} > /dev/null; then
+            image_tag=${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
+            break
+          fi
+        done
+
+        # Check if a base image tag env variable is passed and, if so, check if an image exists in the registry with that tag.
+        # if so use that image as cache for building
+        if [ -n "${BASE_IMAGE_CACHE_TAG}" ]; then
+          if docker manifest inspect ${CI_REGISTRY_IMAGE}:${BASE_IMAGE_CACHE_TAG} > /dev/null; then
+            base_image_tag=${BASE_IMAGE_CACHE_TAG}
+          fi
+        fi
+
+        docker build --build-arg BUILDKIT_INLINE_CACHE=1 \
+          ${DOCKER_BUILD_ARGS:+$DOCKER_BUILD_ARGS} \
+          ${DOCKER_TARGET:+--target $DOCKER_TARGET} \
+          ${base_image_tag:+ --cache-from ${CI_REGISTRY_IMAGE}:${base_image_tag}} \
+          ${image_tag:+ --cache-from ${CI_REGISTRY_IMAGE}:${image_tag}} \
+          -f ${DOCKERFILE_PATH}${DOCKERFILE_FILENAME} \
+          -t ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} \
+          ${DOCKER_BUILD_CONTEXT}
+      else
+        # don't use cache when building
+        docker build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 \
+          ${DOCKER_BUILD_ARGS:+$DOCKER_BUILD_ARGS} \
+          ${DOCKER_TARGET:+--target $DOCKER_TARGET} \
+          -f ${DOCKERFILE_PATH}${DOCKERFILE_FILENAME} \
+          -t ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} \
+          ${DOCKER_BUILD_CONTEXT}
+      fi
+  after_script:
+    - docker logout ${CI_REGISTRY}
