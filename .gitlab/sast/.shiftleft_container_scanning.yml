@@ -1,0 +1,18 @@
+variables:
+  SHIFTLEFT_VERSION: "latest"
+
+.shiftleft_container_scanning:
+  image: shiftleft/sast-scan:${SHIFTLEFT_VERSION}
+  variables:
+    CI_OUTPUT_DIR: "${CI_PROJECT_DIR}/gitlab_ci_artifacts/reports/sast/shiftleft"
+    SCAN_DEBUG_MODE: "debug"
+  script:
+    # Ensure a reports dir exists
+    - mkdir -p ${CI_OUTPUT_DIR}
+
+    # Run the scan
+    - scan --src ${CI_PROJECT_DIR} --out_dir ${CI_OUTPUT_DIR}
+  artifacts:
+    paths:
+      - ${CI_OUTPUT_DIR}
+    when: always
