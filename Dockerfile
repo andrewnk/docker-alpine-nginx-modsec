@@ -4,7 +4,7 @@ FROM nginx:${NGINX_VER}-alpine as base
 
 ARG GEO_DB_RELEASE=2021-11
 ARG MODSEC_TAG=v3.0.6
-ARG OWASP_BRANCH=v3.3/master
+ARG OWASP_TAG=v3.3.2
 
 WORKDIR /opt
 
@@ -52,7 +52,7 @@ RUN echo "Installing ModSec Library" && \
 RUN echo 'Cloning Modsec Nginx Connector, GeoIP, ModSec OWASP Rules, and download/extract nginx and GeoIP databases' && \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git && \
     git clone -b master --depth 1 https://github.com/leev/ngx_http_geoip2_module.git && \
-    git clone -b ${OWASP_BRANCH} --depth 1 https://github.com/coreruleset/coreruleset.git /usr/local/owasp-modsecurity-crs && \
+    git clone -b ${OWASP_TAG} --depth 1 https://github.com/coreruleset/coreruleset.git /usr/local/owasp-modsecurity-crs && \
     wget -O - https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz | tar -xz && \
     mkdir -p /etc/nginx/geoip && \
     wget -O - https://download.db-ip.com/free/dbip-city-lite-${GEO_DB_RELEASE}.mmdb.gz | gzip -d > /etc/nginx/geoip/dbip-city-lite.mmdb && \
