@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # this script automates the process of bumping three different args in the Dockerfile. The user has the option
-# to update either the GEO_DB_RELEASE, MODSEC_TAG, or OWASP_BRANCH variable. Updating will modify the variable
+# to update either the GEO_DB_RELEASE, MODSEC_TAG, or OWASP_TAG variable. Updating will modify the variable
 # on all branches.
 
 modsec_repo_url="https://github.com/SpiderLabs/ModSecurity.git"
 owasp_repo_url="https://github.com/coreruleset/coreruleset.git"
 
-options=("GEO_DB_RELEASE" "MODSEC_TAG" "OWASP_BRANCH")
+options=("GEO_DB_RELEASE" "MODSEC_TAG" "OWASP_TAG")
 PS3="Choose variable to update: "
 
 update () {
@@ -47,12 +47,12 @@ select var in "${options[@]}"; do
       fi
       exit
       ;;
-    "OWASP_BRANCH")
-      read -p "OWASP_BRANCH: " owasp_branch
-      if [ $(git ls-remote --heads "${owasp_repo_url}" "${owasp_branch}" | wc -l) -eq 1 ] ; then
-        update "OWASP_BRANCH" ${owasp_branch}
+    "OWASP_TAG")
+      read -p "OWASP_TAG: " owasp_tag
+      if [ $(git ls-remote --heads "${owasp_repo_url}" "${owasp_tag}" | wc -l) -eq 1 ] ; then
+        update "OWASP_TAG" ${owasp_tag}
       else
-        echo "The branch '${owasp_branch}' for ${owasp_repo_url} does not exist"
+        echo "The branch '${owasp_tag}' for ${owasp_repo_url} does not exist"
       fi
       exit
       ;;
