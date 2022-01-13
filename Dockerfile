@@ -95,6 +95,7 @@ RUN apk add --no-cache \
     libstdc++ \
     libxml2-dev \
     lmdb-dev \
+    pcre \
     tzdata \
     yajl && \
     chown -R nginx:nginx /usr/share/nginx
