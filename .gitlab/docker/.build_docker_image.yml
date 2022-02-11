@@ -8,6 +8,7 @@
     DOCKER_BUILD_ARGS: ""
     DOCKER_BUILD_CONTEXT: .
     DOCKER_CLI_EXPERIMENTAL: "enabled"
+    DOCKER_IMAGE_NAME: ""
     DOCKER_TARGET: ""
     DOCKERFILE_FILENAME: Dockerfile
     DOCKERFILE_PATH: ./
@@ -21,10 +22,10 @@
         # work our way through possible image tags to find a potential match to use for cache
         echo "${IMAGE_CACHE_TAGS}" | tr ' ' '\n' | while read tag; do
           # Check registry where image tag has DOCKER_TARGET
-          if docker manifest inspect ${CI_REGISTRY_IMAGE}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET} > /dev/null; then
+          if docker manifest inspect ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET} > /dev/null; then
             image_tag=${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
             break
-          elif docker manifest inspect ${CI_REGISTRY_IMAGE}:${tag} > /dev/null; then
+          elif docker manifest inspect ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag} > /dev/null; then
             # Check registry where image tag does not have a DOCKER_TARGET
             image_tag=${tag}
             break
@@ -34,7 +35,7 @@
         # Check if a base image tag env variable is passed and, if so, check if an image exists in the registry with that tag.
         # if so use that image as cache for building
         if [ -n "${BASE_IMAGE_CACHE_TAG}" ]; then
-          if docker manifest inspect ${CI_REGISTRY_IMAGE}:${BASE_IMAGE_CACHE_TAG} > /dev/null; then
+          if docker manifest inspect ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${BASE_IMAGE_CACHE_TAG} > /dev/null; then
             base_image_tag=${BASE_IMAGE_CACHE_TAG}
           fi
         fi
@@ -42,8 +43,8 @@
         docker build --build-arg BUILDKIT_INLINE_CACHE=1 \
           ${DOCKER_BUILD_ARGS:+$DOCKER_BUILD_ARGS} \
           ${DOCKER_TARGET:+--target $DOCKER_TARGET} \
-          ${base_image_tag:+ --cache-from ${CI_REGISTRY_IMAGE}:${base_image_tag}} \
-          ${image_tag:+ --cache-from ${CI_REGISTRY_IMAGE}:${image_tag}} \
+          ${base_image_tag:+ --cache-from ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${base_image_tag}} \
+          ${image_tag:+ --cache-from ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${image_tag}} \
           -f ${DOCKERFILE_PATH}${DOCKERFILE_FILENAME} \
           -t ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} \
           ${DOCKER_BUILD_CONTEXT}
