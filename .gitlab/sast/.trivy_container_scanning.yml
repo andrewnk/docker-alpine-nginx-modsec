@@ -15,13 +15,13 @@ variables:
     - mkdir -p ${CI_OUTPUT_DIR} ${TRIVY_CACHE_DIR}
 
     # Build report
-    - trivy --exit-code 0 --cache-dir ${TRIVY_CACHE_DIR} --no-progress -o ${CI_OUTPUT_DIR}/${TRIVY_OUTPUT_FILENAME} ${CI_IMAGE_NAME}
-
+    - trivy --cache-dir ${TRIVY_CACHE_DIR} image --exit-code 0 --no-progress -o ${CI_OUTPUT_DIR}/${TRIVY_OUTPUT_FILENAME} ${CI_IMAGE_NAME}
+    
     # Print high vulnerabilities
-    - trivy --exit-code 0 --cache-dir ${TRIVY_CACHE_DIR} --no-progress --severity HIGH ${CI_IMAGE_NAME}
+    - trivy --cache-dir ${TRIVY_CACHE_DIR} image --exit-code 0 --no-progress --severity HIGH ${CI_IMAGE_NAME}
 
     # Throw error on critical vulnerabilities
-    - trivy --exit-code 1 --cache-dir ${TRIVY_CACHE_DIR} --severity CRITICAL --no-progress ${CI_IMAGE_NAME}
+    - trivy --cache-dir ${TRIVY_CACHE_DIR} image --exit-code 1 --severity CRITICAL --ignore-unfixed --no-progress ${CI_IMAGE_NAME}
   cache:
     paths:
       - ${TRIVY_CACHE_DIR}
