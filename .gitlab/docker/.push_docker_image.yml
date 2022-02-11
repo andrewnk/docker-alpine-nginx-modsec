@@ -3,6 +3,7 @@
     - docker:dind
   variables:
     CI_IMAGE_NAME: "${CI_PROJECT_ID}-${CI_PIPELINE_ID}"
+    DOCKER_IMAGE_NAME: ""
     DOCKER_TARGET: ""
     IMAGE_TAGS: "${CI_COMMIT_REF_SLUG} ${CI_COMMIT_SHA} ${CI_COMMIT_SHORT_SHA} ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
     TAG_IMAGE_WITH_TARGET: "true"
@@ -10,17 +11,17 @@
     - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
   script:
     - >
-      echo "${IMAGE_TAGS}" | tr ' ' '\n' | while read tag; do
+      echo "${IMAGE_TAGS}" | tr ' ' '\n' | sed 's/[^[:alnum:]\.\_\-]/_/g' | while read tag; do
         # Only tag and push if element is not an empty string
         if [[ -n "${tag}" ]]; then
           if [[ "${TAG_IMAGE_WITH_TARGET}" == "true" ]]; then
-            docker tag ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} ${CI_REGISTRY_IMAGE}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
-            docker push ${CI_REGISTRY_IMAGE}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
-            docker image rm -f ${CI_REGISTRY_IMAGE}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
+            docker tag ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
+            docker push ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
+            docker image rm -f ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}${DOCKER_TARGET:+-$DOCKER_TARGET}
           else
-            docker tag ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} ${CI_REGISTRY_IMAGE}:${tag}
-            docker push ${CI_REGISTRY_IMAGE}:${tag}
-            docker image rm -f ${CI_REGISTRY_IMAGE}:${tag}
+            docker tag ${CI_IMAGE_NAME}${DOCKER_TARGET:+-$DOCKER_TARGET} ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}
+            docker push ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}
+            docker image rm -f ${CI_REGISTRY_IMAGE}${DOCKER_IMAGE_NAME:+/$DOCKER_IMAGE_NAME}:${tag}
           fi
         fi
       done
