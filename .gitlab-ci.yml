@@ -7,21 +7,16 @@ include:
   - ".gitlab/sast/.trivy_container_scanning.yml"
 
 stages:
-  - build:base
-  - push_tmp:base
-  - build:prod
-  - push_tmp:prod
+  - build_and_push:tmp_base_image
+  - build_and_push:tmp_prod_image
   - sast:prod
-  - remove_tmp:prod
-  - remove_tmp:base
-  - push:base
-  - push:prod
-  - remove:base
-  - remove:prod
+  - remove:tmp_images_from_registry
+  - push:final_images
+  - remove:tmp_images_from_host
 
 # -- Start - Build and push base image
 build_base_image:
-  stage: build:base
+  stage: build_and_push:tmp_base_image
   extends:
     - .build_docker_image
   variables:
@@ -30,7 +25,7 @@ build_base_image:
     - build
 
 push_tmp_base_image_to_registry:
-  stage: push_tmp:base
+  stage: build_and_push:tmp_base_image
   extends:
     - .push_docker_image
   needs:
@@ -44,7 +39,7 @@ push_tmp_base_image_to_registry:
 
 # -- Start - build, push temp prod image, and test prod image
 build_prod_image:
-  stage: build:prod
+  stage: build_and_push:tmp_prod_image
   extends:
     - .build_docker_image
   variables:
@@ -57,7 +52,7 @@ build_prod_image:
     - build
 
 push_tmp_prod_image_to_registry:
-  stage: push_tmp:prod
+  stage: build_and_push:tmp_prod_image
   extends:
     - .push_docker_image
   needs:
@@ -97,7 +92,7 @@ trivy_container_scanning:
 
 # -- Start - Remove temp images from registry
 remove_tmp_prod_image_from_registry:
-  stage: remove_tmp:prod
+  stage: remove:tmp_images_from_registry
   extends:
     - .remove_docker_image_from_registry
   variables:
@@ -112,7 +107,7 @@ remove_tmp_prod_image_from_registry:
   allow_failure: true
 
 remove_tmp_base_image_from_registry:
-  stage: remove_tmp:base
+  stage: remove:tmp_images_from_registry
   extends:
     - .remove_docker_image_from_registry
   variables:
@@ -128,7 +123,7 @@ remove_tmp_base_image_from_registry:
 
 # -- Start - push final images to registry
 push_base_image_to_registry:
-  stage: push:base
+  stage: push:final_images
   extends:
     - .push_docker_image
   needs:
@@ -139,7 +134,7 @@ push_base_image_to_registry:
     - build
 
 push_prod_image_to_registry:
-  stage: push:prod
+  stage: push:final_images
   extends:
     - .push_docker_image
   needs:
@@ -155,7 +150,7 @@ push_prod_image_to_registry:
 
 # -- Start - remove images passed through pipeline
 remove_base_image:
-  stage: remove:base
+  stage: remove:tmp_images_from_host
   extends:
     - .remove_docker_image
   needs:
@@ -168,7 +163,7 @@ remove_base_image:
     - build
 
 remove_prod_image:
-  stage: remove:prod
+  stage: remove:tmp_images_from_host
   extends:
     - .remove_docker_image
   needs:
