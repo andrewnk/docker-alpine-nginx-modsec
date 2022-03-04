@@ -52,7 +52,7 @@ select var in "${options[@]}"; do
       if [ $(git ls-remote --heads "${owasp_repo_url}" "${owasp_tag}" | wc -l) -eq 1 ] ; then
         update "OWASP_TAG" ${owasp_tag}
       else
-        echo "The branch '${owasp_tag}' for ${owasp_repo_url} does not exist"
+        echo "The tag '${owasp_tag}' for ${owasp_repo_url} does not exist"
       fi
       exit
       ;;
