@@ -21,6 +21,7 @@ build_base_image:
     - .build_docker_image
   variables:
     DOCKER_TARGET: "base"
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
   tags:
     - build
 
@@ -31,6 +32,7 @@ push_tmp_base_image_to_registry:
   needs:
     - build_base_image
   variables:
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
     DOCKER_TARGET: "base"
     IMAGE_TAGS: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
   tags:
@@ -44,6 +46,7 @@ build_prod_image:
     - .build_docker_image
   variables:
     BASE_IMAGE_CACHE_TAG: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}-base
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
     DOCKER_BUILD_ARGS: "--build-arg RAILS_ENV=production"
     DOCKER_TARGET: "production"
   needs:
@@ -59,6 +62,7 @@ push_tmp_prod_image_to_registry:
     - build_prod_image
   variables:
     DOCKER_TARGET: "production"
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
     IMAGE_TAGS: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
   tags:
     - build
@@ -129,6 +133,7 @@ push_base_image_to_registry:
   needs:
     - remove_tmp_base_image_from_registry
   variables:
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
     DOCKER_TARGET: "base"
   tags:
     - build
@@ -142,6 +147,7 @@ push_prod_image_to_registry:
     - shiftleft_container_scanning
     - trivy_container_scanning
   variables:
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
     DOCKER_TARGET: "production"
     TAG_IMAGE_WITH_TARGET: "false"
   tags:
@@ -156,7 +162,7 @@ remove_base_image:
   needs:
     - push_base_image_to_registry
   variables:
-    IMAGE_TAGS: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}-base
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}-base
   rules:
     - when: always
   tags:
@@ -169,7 +175,7 @@ remove_prod_image:
   needs:
     - push_prod_image_to_registry
   variables:
-    IMAGE_TAGS: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}-production
+    CI_IMAGE_NAME: ${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}-production
   rules:
     - when: always
   tags:
