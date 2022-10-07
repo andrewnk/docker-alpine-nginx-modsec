@@ -49,7 +49,7 @@ select var in "${options[@]}"; do
       ;;
     "OWASP_TAG")
       read -p "OWASP_TAG: " owasp_tag
-      if [ $(git ls-remote --heads "${owasp_repo_url}" "${owasp_tag}" | wc -l) -eq 1 ] ; then
+      if [ $(git ls-remote --tags "${owasp_repo_url}" "${owasp_tag}" | wc -l) -eq 1 ] ; then
         update "OWASP_TAG" ${owasp_tag}
       else
         echo "The tag '${owasp_tag}' for ${owasp_repo_url} does not exist"
