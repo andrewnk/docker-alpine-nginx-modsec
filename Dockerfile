@@ -1,4 +1,4 @@
-ARG NGINX_VER=1.23.1
+ARG NGINX_VER=1.23.3
 
 FROM nginx:${NGINX_VER}-alpine as base
 
